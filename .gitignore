@@ -1,0 +1,28 @@
+.venv/
+.cache/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+.DS_Store
+
+# Local credentials, price caches and personal portfolio exports
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.pem
+*.key
+*.log
+*.csv
+!examples/*.csv
+uploads/
+exports/
+
+# Local review screenshots and packaged copies
+preview*.png
+preview*.jpg
+*.zip
