@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>How does it work? | Portfolio simulator</title>
+  <meta name="description" content="How to use the portfolio simulator, read its charts and compare simulation models.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='how-it-works.js') }}" defer></script>
+</head>
+<body>
+<main>
+  <header>
+    <h1>How does it work?</h1>
+    <nav class="import-actions" aria-label="Page navigation">
+      <button id="theme-toggle" aria-pressed="false" aria-label="Dark mode">Dark mode</button>
+      <a class="button" href="{{ url_for('index') }}">Open simulator</a>
+    </nav>
+  </header>
+  <p class="data-line">Portfolio simulator | A guide to the results</p>
+  <article class="help-content">
+    <section aria-labelledby="getting-started">
+      <h2 id="getting-started">Start with your holdings</h2>
+      <p>Upload a holdings CSV or a full Scalable Capital transaction export. You can also choose up to 10 stocks and edit their share quantities, or use the synthetic example to explore the controls.</p>
+      <p>Select EUR or USD, then simulate all holdings, stocks only or ETFs only. The starting value is the sum of the included positions at their latest available completed closing prices. Price dates appear above the chart and in Holdings.</p>
+    </section>
+    <section aria-labelledby="simulation">
+      <h2 id="simulation">One portfolio, many possible paths</h2>
+      <p>The simulator uses up to five years of adjusted price history to estimate returns, volatility and how the holdings move together. It generates many possible paths for each holding, then adds their values to form a portfolio path.</p>
+      <p>The portfolio is buy and hold, with dividends reinvested within each holding. It assumes no extra deposits or rebalancing and excludes options, fees and taxes. Holdings without enough price history are excluded with an explanation.</p>
+    </section>
+    <section aria-labelledby="reading-results">
+      <h2 id="reading-results">Read the chart</h2>
+      <ul>
+        <li><strong>Median outcome:</strong> half the simulated final values are above it and half below. The percentage beside it is the total return over the selected period, not an annual return.</li>
+        <li><strong>5th–95th percentile:</strong> the middle 90% of simulated values at each point in time. It does not mean a path has a 90% chance of staying inside the band for the whole period.</li>
+        <li><strong>Chance of ending below start:</strong> the share of simulations that finish below the starting portfolio value.</li>
+      </ul>
+      <p>In single-model mode, the chart displays 25 sample paths alongside the percentile lines. Click a line to highlight it; click it again to clear. Scroll over the graph to zoom. With Pan selected, drag to move around; choose Zoom area to drag a rectangle around a region. Reset view or double-click the graph to show the full simulation again. Expand Final-value distribution to see how the simulated end values are spread out.</p>
+    </section>
+    <section aria-labelledby="allocation-guide">
+      <h2 id="allocation-guide">See your portfolio allocation</h2>
+      <p>The chart at the bottom shows the included holdings by starting value in your selected currency, with each holding’s value and weight in the table. Excluded holdings are omitted. With more than eight holdings, smaller positions are grouped in the chart but remain listed individually.</p>
+      <p>Close a notification with ×. The same notice stays dismissed for this page session; new notices and errors can still appear.</p>
+    </section>
+    <section aria-labelledby="models">
+      <h2 id="models">Choose a model</h2>
+      <dl class="help-models">
+        <dt>GBM</dt><dd>The default model, with constant volatility and correlated random returns.</dd>
+        <dt>Merton</dt><dd>Adds occasional shared market jumps, representing sudden falls or rises.</dd>
+        <dt>Heston</dt><dd>Lets each holding’s volatility change over time.</dd>
+        <dt>Bootstrap</dt><dd>Reuses historical monthly returns, sampling the same months across holdings to keep their observed relationships.</dd>
+      </dl>
+      <p>Enable Compare models to show one median line per model. The table lists each model’s outcome range. Hover to compare values at the same time, or click a model name to focus its line. The main model dropdown controls the headline statistics and final-value distribution.</p>
+    </section>
+    <section aria-labelledby="assumptions">
+      <h2 id="assumptions">Explore different assumptions</h2>
+      <p>Open Models, assumptions &amp; backtest to choose a preset or stress scenario. Return and volatility assumptions are handled automatically.</p>
+      <p>Sliders and number fields update together and rerun after a short pause. Presets provide starting assumptions that you can edit. Use portfolio history restores fitted drift and volatility.</p>
+      <p>Stress scenarios apply illustrative crisis conditions for the entire selected horizon, rather than replaying a historical event. Return to normal restores the assumptions you were using before the stress scenario.</p>
+    </section>
+    <section aria-labelledby="backtest-guide">
+      <h2 id="backtest-guide">Compare with a historical year</h2>
+      <p>Backtesting fits the model on earlier months and holds out the final 12 months for comparison. It requires at least 36 shared, uninterrupted months of history. The chart shows the held-out path, its final percentile and how often it falls outside the simulated range.</p>
+      <p>This replays today’s selected holdings and starting allocation; it is not your actual account history. The example uses synthetic data. Historical results and simulated outcomes are not guarantees of future performance.</p>
+    </section>
+    <section aria-labelledby="running">
+      <h2 id="running">While a simulation runs</h2>
+      <p>Calculations run in Python in the background, with progress shown on the page. You can cancel a run or change settings to replace it. Large runs take longer; only chart summaries and sample paths are sent to the browser.</p>
+    </section>
+    <section id="credits" aria-labelledby="credits-heading">
+      <h2 id="credits-heading">Credits</h2>
+      {# Replace these two values with your name and full LinkedIn profile URL. #}
+      {% set creator_name = '[Your name]' %}
+      {% set linkedin_url = '' %}
+      <p>Created by <strong>{{ creator_name }}</strong>.</p>
+      {% if linkedin_url %}
+      <a href="{{ linkedin_url }}" target="_blank" rel="noopener">LinkedIn</a>
+      {% else %}
+      <span class="muted">[Your LinkedIn profile]</span>
+      {% endif %}
+    </section>
+  </article>
+  <footer><span>Portfolio simulator</span><a href="{{ url_for('index') }}">Open simulator</a></footer>
+</main>
+</body>
+</html>

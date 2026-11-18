@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Portfolio Monte Carlo Simulation</title>
+  <meta name="description" content="A minimal Python portfolio Monte Carlo simulator for stock and ETF holdings.">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script defer src="/assets/plotly.min.js"></script>
+  <script defer src="{{ url_for('static', filename='chart-data.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='experiments.js') }}"></script>
+</head>
+<body data-demo-only="{{ 'true' if demo_only else 'false' }}">
+<main>
+  <header>
+    <h1>Portfolio simulator</h1>
+    <div class="import-actions">
+      <button id="example" class="quiet">Use example</button>
+      {% if not demo_only %}<label class="button" for="upload">Upload CSV</label><input id="upload" type="file" accept=".csv,text/csv" class="file-input">{% endif %}
+      <button id="theme-toggle" aria-pressed="false" aria-label="Dark mode">Dark mode</button>
+      <a class="button quiet" href="{{ url_for('how_it_works') }}" target="_blank" rel="noopener" title="Opens in a new tab so your portfolio stays open">How does it work?</a>
+    </div>
+  </header>
+  <div class="data-line"><span id="data-label">Stocks and ETFs | Monte Carlo simulation</span></div>
+  <section id="mapping-panel" class="panel" hidden aria-label="CSV column mapping">
+    <div class="section-head"><h2 id="import-title">Match your holdings columns</h2><button id="cancel-import" class="quiet">Cancel</button></div>
+    <p id="import-help" class="muted">Upload current holdings, or a full Scalable Capital transaction export. Other broker holdings use column mapping.</p>
+    <div id="mappings" class="mapping-grid"></div>
+    <label>Number format<select id="decimal"><option value=".">1,234.56 (decimal point)</option><option value=",">1.234,56 (decimal comma)</option></select></label>
+    <div id="csv-preview" class="table-wrap"></div>
+    <button id="import-confirm" class="primary">Import holdings</button>
+  </section>
+  <div id="message" role="status" aria-live="polite" hidden><span id="message-text"></span><button id="dismiss-message" class="quiet" aria-label="Dismiss notification" title="Dismiss notification">×</button></div>
+  {% if not demo_only %}
+  <section id="picker-panel" class="panel" hidden aria-label="Choose stocks">
+    <div class="section-head"><h2>Choose up to 10 stocks</h2><button id="picker-close" class="quiet">Close</button></div>
+    <p class="muted">Start with one share of each stock. You can change quantities under Holdings.</p>
+    <div id="popular-stocks" class="stock-buttons"></div>
+    <div class="stock-search"><label for="stock-query">Find another stock<input id="stock-query" placeholder="Company name or ticker" maxlength="80"></label><button id="stock-search">Search</button></div>
+    <div id="stock-search-results" role="status" aria-live="polite"></div>
+    <div class="picker-heading"><span id="picked-count">0 of 10 selected</span></div>
+    <div id="picked-stocks" class="stock-buttons"></div>
+    <button id="simulate-picked" class="primary" disabled>Simulate selected stocks</button>
+  </section>
+  {% endif %}
+  <section class="controls" aria-label="Simulation settings">
+    <fieldset class="segmented"><legend class="sr-only">Holdings to simulate</legend>
+      <label><input type="radio" name="selection" value="All" checked><span>All holdings</span></label>
+      <label><input type="radio" name="selection" value="Stock"><span>Stocks only</span></label>
+      <label><input type="radio" name="selection" value="ETF"><span>ETFs only</span></label>
+    </fieldset>
+    <div class="settings">
+      <label>Currency<select id="currency"><option>EUR</option><option>USD</option></select></label>
+      <label>Model<select id="model"><option value="gbm">GBM</option><option value="merton">Merton</option><option value="heston">Heston</option><option value="bootstrap">Bootstrap</option></select></label>
+      <label>Years<input id="years" type="number" min="1" max="30" value="10"><input id="years-slider" aria-label="Time horizon in years" type="range" min="1" max="30" value="10"></label>
+      <label>Paths<input id="paths" type="number" min="100" max="200000" step="100" value="2000"><input id="paths-slider" aria-label="Number of simulation paths" type="range" min="100" max="200000" step="100" value="2000"></label>
+      <button id="run" class="primary" disabled>Run simulation</button>
+    </div>
+  </section>
+  <details id="experiment-panel">
+    <summary>Models, assumptions &amp; backtest<span id="preset-active" class="muted">Historical fit</span></summary>
+    <div class="experiment-row">
+      <label class="check"><input id="compare-models" type="checkbox">Compare models</label>
+      <fieldset id="compare-choices" class="model-choices" hidden><legend class="sr-only">Models to compare</legend>
+        <label class="check"><input type="checkbox" name="compare-model" value="gbm" checked>GBM</label>
+        <label class="check"><input type="checkbox" name="compare-model" value="merton" checked>Merton</label>
+        <label class="check"><input type="checkbox" name="compare-model" value="heston">Heston</label>
+        <label class="check"><input type="checkbox" name="compare-model" value="bootstrap">Bootstrap</label>
+      </fieldset>
+    </div>
+    <p id="model-help" class="muted">GBM uses correlated monthly log returns and constant volatility.</p>
+    <div class="experiment-row preset-buttons" aria-label="Simulation presets"><button data-preset="conservative">Conservative</button><button data-preset="aggressive">Aggressive</button><button data-preset="sp500">S&amp;P 500 historical</button><button id="historical-fit" class="quiet">Use portfolio history</button></div>
+    <div class="experiment-row"><label>Stress scenario<select id="scenario"><option value="normal">Normal settings</option><option value="crisis2008">2008 financial crisis</option><option value="covid2020">2020 COVID crash</option><option value="rates">Interest rate shock</option></select></label><button id="normal-settings" class="quiet">Return to normal</button></div>
+    <p id="scenario-note" class="muted">No stress override. Scenarios are illustrative constant regimes, not exact event replays.</p>
+    <label class="check"><input id="backtest" type="checkbox">Backtest the last 12 months (one-year horizon)</label>
+    <p class="muted">Fit on earlier data, then compare against the held-out final year. Requires 36 shared months. Replays today’s selected holdings and starting weights, not your actual account history. Example mode uses synthetic history.</p>
+  </details>
+  <div id="run-status" class="experiment-row" role="status" aria-live="polite" hidden><progress id="run-progress" max="100" value="0" aria-label="Simulation progress"></progress><span id="run-message">Preparing simulation…</span><button id="cancel-run" class="quiet">Cancel run</button></div>
+  <section id="results" aria-label="Portfolio simulation results">
+    <div class="metrics" id="metrics" hidden>
+      <div><span>Starting portfolio</span><strong id="initial">—</strong></div>
+      <div><span>Median outcome</span><div class="median-value"><strong id="median">—</strong><span id="median-return" title="Total median return over the selected period"></span></div></div>
+      <div><span>5th–95th percentile</span><strong id="range">—</strong></div>
+      <div><span>Chance of ending below start</span><strong id="loss">—</strong></div>
+    </div>
+    <p id="model-note" class="muted" hidden></p>
+    <div id="comparison-summary" class="table-wrap" hidden></div>
+    <p id="backtest-summary" class="muted" role="status" hidden></p>
+    <div class="chart-head"><h2>Portfolio value</h2><div class="legend" id="chart-legend" hidden><span class="median-key">Median</span><span class="band-key">Middle 90%</span></div></div>
+    <div id="chart-navigation" class="chart-navigation" hidden>
+      <span id="chart-navigation-help">Scroll to zoom | Drag to move</span>
+      <div class="chart-navigation-actions" role="group" aria-label="Chart navigation">
+        <button id="chart-pan" class="quiet" aria-pressed="true" title="Drag the graph to move around">Pan</button>
+        <button id="chart-zoom" class="quiet" aria-pressed="false" title="Drag a rectangle to zoom into that area">Zoom area</button>
+        <button id="chart-reset" class="quiet" title="Show the full simulation again">Reset view</button>
+      </div>
+    </div>
+    <div class="chart-shell">
+      <div id="loading-state" class="loading-state" role="status" aria-live="polite" hidden><span class="spinner" aria-hidden="true"></span><span id="loading-text">Running simulation…</span></div>
+      <div id="chart" class="main-chart" aria-label="Simulated portfolio value over time" hidden></div>
+      <div id="empty-chart" class="empty-chart">
+        <h2>Simulate your portfolio</h2>
+        {% if not demo_only %}
+        <p>Upload your holdings or choose up to 10 stocks to see possible portfolio outcomes.</p>
+        <div class="empty-actions"><label class="button primary" for="upload">Upload CSV</label><button id="choose-stocks">Choose stocks</button><a class="template-link" href="/api/template">Download CSV template</a></div>
+        {% else %}<p>Choose “Use example” to explore a simulation with synthetic data.</p>{% endif %}
+      </div>
+    </div>
+    <div class="chart-footer" id="chart-footer" hidden><span id="chart-note">Monthly paths | no additional deposits</span><button id="download" class="quiet" disabled>Download chart</button></div>
+    <div class="selection-row" id="selection-row" hidden><span id="selection-note" role="status" aria-live="polite">Click a sample path to highlight it; click it again to clear.</span><button id="clear-path" class="quiet" hidden>Clear highlight</button></div>
+    <details id="distribution" hidden><summary>Final-value distribution</summary><div id="histogram" class="histogram" aria-label="Distribution of final portfolio values"></div></details>
+  </section>
+  <details id="holdings-panel" hidden>
+    <summary><span id="holdings-title">Holdings</span></summary>
+    <p id="holdings-help" class="muted">Review your chosen holdings here.</p>
+    <div id="holdings" class="table-wrap"></div>
+    <div id="lookup" class="panel" hidden><div class="section-head"><h2>Choose the correct listing</h2><button id="lookup-close" class="quiet">Close</button></div><label>Search ticker, ISIN or name<input id="lookup-query" maxlength="80"></label><button id="lookup-search">Search</button><div id="lookup-results"></div></div>
+  </details>
+  <details>
+    <summary>Method & data</summary>
+    <p>Correlated monthly lognormal paths fitted to up to five years of adjusted closing prices. Buy and hold, dividends reinvested within each holding, no rebalancing or deposits. Currency movements are included. Options, fees and taxes are excluded. Holdings with insufficient history are automatically excluded and listed with a reason; their values are omitted from the starting portfolio. Historical returns are uncertain estimates, not forecasts.</p>
+    <p>GBM is the original default. Merton adds compensated shared jumps; Heston uses stochastic variance with four substeps per month; bootstrap resamples monthly return rows or circular blocks. Model comparison uses matching inputs and seeds, not identical shocks across different models. Stress scenarios are illustrative constant regimes. The drift control is an annual log-return rate, not a promised simple return.</p>
+    <p id="history-note" class="muted">Upload holdings or choose stocks to get started.</p>
+    <p class="muted">Market mode uses latest available completed daily closes, not live quotes. Yahoo Finance prices and Frankfurter daily currency rates are checked when you run; successful responses are cached for 15 minutes. Refresh bypasses that cache. Dates and sources appear with each holding.</p>
+    <div class="advanced"><label>Random seed<input id="seed" type="number" min="0" max="4294967295" value="42"></label><label class="check"><input id="allow-stale" type="checkbox">Allow clearly labeled saved/older data</label><button id="refresh">Refresh prices & run</button></div>
+  </details>
+  <section id="allocation-panel" aria-labelledby="allocation-title" hidden>
+    <h2 id="allocation-title">Portfolio allocation</h2>
+    <p id="allocation-note" class="muted"></p>
+    <div class="allocation-layout">
+      <div id="allocation-chart" aria-label="Portfolio allocation by holding value"></div>
+      <div id="allocation-table" class="table-wrap"></div>
+    </div>
+  </section>
+  <footer><span>Holdings stay in this browser session and server memory.</span><a href="/api/template">CSV template</a></footer>
+</main>
+</body>
+</html>
