@@ -1,6 +1,4 @@
 "use strict";
-// Keep every line point, but draw only visible markers in one shared trace.
-// A zero-size SVG marker still creates an element and slows every zoom/redraw.
 function compactChartMarkers(traces, currency){
   const x=[],y=[],sizes=[],colors=[],targets=[];
   const lines=traces.map((trace,index)=>{

@@ -1,4 +1,3 @@
-"""Free daily data, bounded retries, persistent public-data cache and explicit age."""
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import json
@@ -16,9 +15,9 @@ from .imports import InputError, is_isin, valid_symbol
 
 UTC = timezone.utc
 
-# Verified fallback for a gap in Yahoo's ISIN search index. Class A must not
-# become Class C (GOOG). ISIN/class: https://www.boerse-frankfurt.de/equity/alphabet-inc-class-a
-# NASDAQ symbol/ISIN: https://www.borsaitaliana.it/secder-listing/2025-01843-OFFICIAL_LISTING_DOCUMENTATION-MjAyNS0wMTg0M09GRklDSUFMX0xJU1RJTkdfRE9DVU1FTlRBVElPTm51bGwxNzQ1OTMwODkzNTMz.pdf
+
+
+
 VERIFIED_LISTINGS = {
     'US02079K3059': {'symbol': 'GOOGL', 'name': 'Alphabet Inc. Class A', 'exchange': 'NasdaqGS', 'kind': 'Stock'}
 }
@@ -29,7 +28,7 @@ class MarketError(InputError):
 
 
 class Cache:
-    """Only public market data is persisted. Holdings never enter this database."""
+
     def __init__(self, path):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -61,7 +60,7 @@ def get_json(url, params):
 
 
 def parse_chart(result, now=None):
-    """Never treat an intraday daily bar as a closing price."""
+
     now = now or datetime.now(UTC)
     meta = result["meta"]
     local_tz = ZoneInfo(meta.get("exchangeTimezoneName", "UTC"))
@@ -89,7 +88,7 @@ def parse_chart(result, now=None):
         raise MarketError("No completed daily closes are available.")
     kind = {"EQUITY": "Stock", "ETF": "ETF", "CURRENCY": "FX"}.get(meta.get("instrumentType"), "Unsupported")
     native = meta.get("currency", "")
-    # Yahoo uses GBp/GBX, ZAc and ILA for minor currency units on some exchanges.
+
     currency, scale = {"GBp": ("GBP", .01), "GBX": ("GBP", .01), "ZAc": ("ZAR", .01), "ILA": ("ILS", .01)}.get(native, (native.upper(), 1.0))
     if len(currency) != 3 or not currency.isalpha():
         raise MarketError("The listing's currency could not be verified.")
@@ -185,7 +184,7 @@ class MarketData:
         return self.cached(f"fx:{source}{target}", fetch, force)
 
     def resolve_listing(self, identifier, currency='EUR'):
-        """Rank exact-ISIN search results; never guess a ticker from its name."""
+
         if not is_isin(identifier):
             raise InputError('Automatic listing selection needs an ISIN.')
         cache_key = f'listing:{currency}:{identifier}'
@@ -247,7 +246,7 @@ class MarketData:
                 continue
             selected.append((h, data))
         if excluded:
-            # Explicit feedback; never quietly count an unsupported instrument as equity.
+
             raise InputError("Remove these unsupported positions and run again: " + ", ".join(excluded))
         removal_messages = [f"Automatically excluded {d['name']} ({d['symbol']}) from the simulation because of {d['reason']}. Its value is excluded from the simulated starting portfolio." for d in removed]
         if not selected:
@@ -286,8 +285,8 @@ class MarketData:
             details.append({"symbol": h["symbol"], "name": d["name"], "kind": d["kind"], "quantity": h["quantity"], "currency": d["currency"], "close": close, "date": d["date"], "value": value, "exchange": d["exchange"], "source": d["source"], "retrieved_at": d["retrieved_at"], "cached": d["cached"], "stale": d["stale"], "fx_rate": rate, "fx_date": fx_date, "fx_source": fx_source})
         if not np.isfinite(values).all() or not 0 < sum(values) <= 1e13:
             raise InputError("Portfolio value must be positive and below 10 trillion.")
-        # Use common complete calendar months: no artificial zero holiday returns,
-        # no mixing unequal daily return intervals across exchanges.
+
+
         monthly = {}
         this_month = pd.Timestamp(datetime.now(UTC).date()).to_period("M").start_time
         for symbol, s in series.items():
@@ -296,7 +295,7 @@ class MarketData:
                 raise InputError(f"{symbol}: at least one year of daily history is required.")
             ends = s.resample("ME").last()
             dates = pd.Series(s.index, index=s.index).resample("ME").last()
-            # Drop months whose last quote is implausibly early (suspensions/gaps).
+
             valid = (ends.index - pd.DatetimeIndex(dates)) <= pd.Timedelta(days=7)
             ends = ends.where(valid)
             ends = ends[ends.index < this_month]

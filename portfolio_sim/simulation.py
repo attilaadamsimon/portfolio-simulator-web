@@ -1,4 +1,3 @@
-"""Correlated lognormal asset paths, aggregated as a buy-and-hold portfolio."""
 import numpy as np
 
 from .imports import InputError
@@ -19,14 +18,14 @@ def simulate(returns, values, years=10, paths=2000, seed=42):
     drift = r.mean(axis=0)
     cov = np.atleast_2d(np.cov(r, rowvar=False, ddof=1))
     eigenvalues, eigenvectors = np.linalg.eigh(cov)
-    # PSD projection supports perfectly correlated assets and single-asset portfolios.
+
     root = eigenvectors @ np.diag(np.sqrt(np.maximum(eigenvalues, 0)))
     rng = np.random.default_rng(seed)
     total = np.empty((paths, steps + 1))
     total[:, 0] = values.sum()
     log_growth = np.zeros((paths, n))
     for month in range(1, steps + 1):
-        # Drift is the empirical mean LOG return, so no second -variance/2 term.
+
         log_growth += drift + rng.standard_normal((paths, n)) @ root.T
         if np.max(log_growth) > 600:
             raise InputError("The fitted history produces unstable projections; use a different portfolio or shorter horizon.")
@@ -35,8 +34,8 @@ def simulate(returns, values, years=10, paths=2000, seed=42):
         raise InputError("The simulation exceeded numerical limits.")
     bands = np.percentile(total, [5, 25, 50, 75, 95], axis=0)
     end = total[:, -1]
-    # Near-deterministic portfolios need an explicit range: floating-point noise
-    # can otherwise produce 40 identical histogram edges.
+
+
     histogram_range = None
     if np.ptp(end) < max(1e-8, abs(float(np.median(end))) * 1e-10):
         center = float(np.median(end))

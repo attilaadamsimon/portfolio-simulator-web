@@ -1,7 +1,5 @@
 "use strict";
-// UI state is separate from holdings; no portfolio data is persisted here.
 const experiment={automatic:true,preset:"history",revision:0,job:null,timer:null,normal:null,config:null,forecastYears:10};
-// Assumptions stay internal; presets and stress scenarios set them for the user.
 const parameters={drift:.06,volatility:.20,jump_frequency:.5,jump_mean:-.15,jump_std:.10,kappa:2,theta_vol:.20,xi:.30,rho:-.6,block_months:1};
 const extraFields=["jump_frequency","jump_mean","jump_std","kappa","theta_vol","xi","rho","block_months"];
 const percentFields=new Set(["drift","volatility","jump_mean","jump_std","theta_vol"]);
@@ -36,7 +34,6 @@ function syncExperimentControls(){
 function markCustom(parameter=false){
   experiment.preset='custom';
   if(parameter)experiment.automatic=false;
-  // Editing a stress parameter turns it into an explicit custom configuration.
   if(parameter&&$('scenario').value!=='normal'){
     $('scenario').value='normal';experiment.normal=null;
     $('scenario-note').textContent='Custom assumptions based on the previous stress settings.';
@@ -45,7 +42,6 @@ function markCustom(parameter=false){
 }
 function queueRun(){
   dirty();clearTimeout(experiment.timer);
-  // Trailing debounce: only the latest slider position starts a calculation.
   experiment.timer=setTimeout(()=>{if(state.demo||state.holdings.length)run();},450);
 }
 function validExperiment(){
@@ -85,7 +81,6 @@ async function runBackground(refresh=false){
     }
     const request=settings(refresh);
     const submitted=await api('/api/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request)});
-    // A request cancelled while being submitted must still cancel its server job.
     if(!current()){await api(`/api/jobs/${submitted.id}/cancel`,{method:'POST'});return;}
     experiment.job=submitted.id;
     const started=Date.now();
@@ -119,7 +114,6 @@ function decorateResults(traces,r){
   const legend=$('chart-legend');legend.replaceChildren();
   if(models.length===1){legend.append(node('span','Median','median-key'),node('span','Middle 90%','band-key'));}
   else{
-    // Compare medians alone; the table retains each model's uncertainty range.
     traces.length=0;
     $('model-note').textContent+=' | Chart: median outcomes; ranges in the table below';
     models.forEach((m,i)=>{
@@ -142,7 +136,6 @@ function decorateResults(traces,r){
     $('backtest-summary').textContent=`${info.synthetic?'Synthetic demonstration':`${info.test_start} to ${info.test_end}`} | fitted on ${info.training_months} earlier months (through ${info.train_end}).\n`+models.map(m=>`${modelNames[m.model]}: ${info.synthetic?'Synthetic':'Historical'} result landed at the ${ordinal(m.historical.percentile)} percentile of simulated outcomes; outside the pointwise 5th–95th range in ${m.historical.outside_months} of 12 months.`).join('\n');
   }
 }
-// Range and number fields stay synchronized without firing a second calculation.
 for(const id of ['years','paths']){
   for(const suffix of ['', '-slider'])$(id+suffix).addEventListener('input',()=>{
     const source=$(id+suffix),target=$(id+(suffix?'':'-slider'));target.value=source.value;
@@ -193,6 +186,4 @@ document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListen
   $('model').value='gbm';syncExperimentControls();queueRun();
 }));
 syncExperimentControls();
-
-// Do not leave an expensive run alive after the tab is closed or reloaded.
 window.addEventListener('pagehide',()=>{if(experiment.job)navigator.sendBeacon(`/api/jobs/${experiment.job}/cancel`);});

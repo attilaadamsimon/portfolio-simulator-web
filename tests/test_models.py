@@ -103,7 +103,7 @@ def test_heston_with_constant_variance_matches_gbm_distribution():
 def test_merton_compensation_preserves_expected_price():
     r=np.zeros((36,1))
     out=simulate_model(r,[100],years=1,paths=50000,options={'model':'merton','jump_frequency':2,'jump_mean':-.2,'jump_std':0})
-    # The histogram approximation is sufficient to detect missing/wrong compensation.
+
     h=out['histogram']
     approximate_mean=np.average(h['centers'],weights=h['counts'])
     assert approximate_mean==pytest.approx(100,rel=.03)

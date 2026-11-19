@@ -1,4 +1,4 @@
-/* Shared design tokens for controls, spacing and both chart themes. */
+
 :root{color-scheme:light;--paper:#fafafa;--surface:#fff;--wash:#f0f0f0;--ink:#202124;--muted:#63666d;--line:#dedfe2;--accent:#245bd6;--on-accent:#fff;--highlight:#a85213;--path:rgba(91,104,124,.30);--band90:rgba(71,119,217,.09);--band50:rgba(71,119,217,.12);--warning-bg:#fff7e7;--warning-line:#d7ba80;--warning-ink:#765017;--error-bg:#fff0ed;--error-line:#dfb4ab;--error-ink:#9b3527;--s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;--radius:8px;--control-height:42px}
 :root[data-theme="dark"]{color-scheme:dark;--paper:#212121;--surface:#2b2b2b;--wash:#303030;--ink:#f0f0f0;--muted:#b0b0b0;--line:#414141;--accent:#91b4ff;--on-accent:#14213b;--highlight:#f0bc75;--path:rgba(195,200,210,.30);--band90:rgba(145,180,255,.08);--band50:rgba(145,180,255,.11);--warning-bg:#30291e;--warning-line:#6f5934;--warning-ink:#edcb94;--error-bg:#352421;--error-line:#805248;--error-ink:#f3b5a4}
 *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}main{max-width:1360px;margin:auto;padding:var(--s7) 40px var(--s5)}header,.import-actions,.section-head,.chart-head,.chart-footer,.selection-row,footer{display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}h1,h2,p{overflow-wrap:break-word}h1{font-size:30px;line-height:1.2;font-weight:600;letter-spacing:-.8px;margin:0;text-wrap:balance}h2{font-size:15px;font-weight:600;line-height:1.4;margin:0;text-wrap:balance}.import-actions{justify-content:flex-end;gap:var(--s3);flex-wrap:wrap}
@@ -12,7 +12,7 @@ details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;d
 @media(max-width:650px){main{padding:var(--s5) var(--s4)}header{align-items:flex-start;flex-direction:column;gap:var(--s5)}h1{font-size:27px}.import-actions{justify-content:flex-start}.data-line{margin-bottom:var(--s5)}.settings{flex-wrap:wrap;justify-content:flex-start;gap:var(--s3)}.settings #run{width:100%;margin-top:var(--s2)}.segmented{width:100%;justify-content:space-between}.segmented span{padding:9px 10px}.metrics{grid-template-columns:1fr 1fr;margin:var(--s5) 0}.metrics strong,#range{font-size:22px}.metrics #median-return{font-size:13px}.chart-shell,.empty-chart{min-height:380px}.main-chart{height:420px}.empty-chart{padding:var(--s5) 0}.empty-chart h2{font-size:22px}.legend{gap:var(--s2);font-size:11px}.chart-footer,.selection-row{align-items:flex-start;font-size:11px}.mapping-grid{grid-template-columns:1fr 1fr}.advanced,footer{flex-direction:column;align-items:flex-start;gap:var(--s4)}.check{align-self:flex-start}.panel{padding:var(--s4);border-radius:calc(var(--radius) + var(--s4))}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 
-/* Additional controls reuse the existing palette, spacing and input geometry. */
+
 .experiment-row{display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap;margin:var(--s5) 0}
 .experiment-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:var(--s4);margin:var(--s5) 0}
 .experiment-grid input:not([type=range]){width:100%}.slider-pair{display:flex;align-items:center;gap:var(--s3)}
@@ -28,7 +28,7 @@ details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;d
 .settings{align-items:flex-start}.settings>#run{margin-top:24px}.controls>.segmented{align-self:center}
 @media(max-width:650px){.settings>#run{margin-top:var(--s2)}}
 
-/* The help page shares the simulator's typography, colors and spacing. */
+
 .help-content{max-width:800px}.help-content section{border-top:1px solid var(--line);padding:var(--s5) 0}
 .help-content h2{font-size:17px}.help-content p,.help-content li,.help-models dd{line-height:1.75;color:var(--muted)}
 .help-content p:last-child{margin-bottom:0}.help-content strong,.help-models dt{color:var(--ink);font-weight:550}
@@ -36,7 +36,7 @@ details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;d
 .help-models{display:grid;grid-template-columns:100px 1fr;gap:var(--s3) var(--s5)}.help-models dd{margin:0}
 @media(max-width:650px){.help-models{grid-template-columns:80px 1fr;gap:var(--s3)}}
 
-/* Keep notices dismissible and allocation readable on narrow screens. */
+
 #message{display:flex;align-items:flex-start;gap:var(--s3);white-space:normal}
 #message-text{flex:1;white-space:pre-line}#dismiss-message{flex:none;color:inherit;font-size:22px;line-height:1;width:28px;min-height:28px;padding:0;margin-top:-4px}
 #allocation-panel{border-top:1px solid var(--line);padding:var(--s5) 0}
@@ -49,7 +49,7 @@ details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;d
 
 .legend button.model-key{font-size:12px;padding:4px 6px;gap:0}.legend button.model-key[aria-pressed=true]{background:var(--wash);color:var(--ink)}
 
-/* Compact navigation uses the same quiet controls as the chart footer. */
+
 .chart-navigation{display:flex;justify-content:space-between;align-items:center;gap:var(--s3);margin-top:var(--s3);color:var(--muted);font-size:12px}
 .chart-navigation-actions{display:flex;gap:var(--s2)}.chart-navigation-actions .quiet{padding:6px 10px}
 .chart-navigation-actions [aria-pressed=true]{background:var(--wash);color:var(--ink)}

@@ -71,7 +71,7 @@ def test_valuation_uses_unadjusted_close_and_filters(tmp_path,monkeypatch):
 
 def test_fx_moves_returns_and_does_not_look_ahead(tmp_path,monkeypatch):
     m=MarketData(tmp_path/'cache.db');data=asset()
-    # Fixed native price: all return variation must come from FX.
+
     for row in data['rows']:row['close']=100.;row['adjusted']=100.
     rates=[{'date':r['date'],'rate':.8+i*.0001} for i,r in enumerate(data['rows'])]
     rates.append({'date':(datetime.now(timezone.utc).date()+timedelta(days=2)).isoformat(),'rate':9.})
@@ -123,7 +123,7 @@ def test_short_history_automatically_excluded_and_value_removed(tmp_path, monkey
     assert result['excluded_holdings'][0]['symbol'] == 'NEW'
     assert 'Automatically excluded New company (NEW)' in result['warnings'][0]
     assert ('252' if count < 252 else '24 required') in result['warnings'][0]
-    # Exclusion is per run; it never deletes the uploaded holding.
+
     assert len(holdings) == 2
 
 

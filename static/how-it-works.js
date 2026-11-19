@@ -1,5 +1,4 @@
 "use strict";
-// Use the same saved theme as the simulator without loading its chart code.
 const themeButton=document.getElementById('theme-toggle');
 function setHelpTheme(theme){
   document.documentElement.dataset.theme=theme;

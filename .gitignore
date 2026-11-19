@@ -5,8 +5,6 @@ __pycache__/
 *.pyc
 .env
 .DS_Store
-
-# Local credentials, price caches and personal portfolio exports
 .env.*
 !.env.example
 *.db
@@ -21,8 +19,6 @@ __pycache__/
 !examples/*.csv
 uploads/
 exports/
-
-# Local review screenshots and packaged copies
 preview*.png
 preview*.jpg
 *.zip

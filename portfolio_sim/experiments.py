@@ -1,4 +1,3 @@
-"""Compare models and hold out the final year for a historical check."""
 from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
@@ -36,7 +35,7 @@ def backtest_inputs(returns, values):
         if np.any(np.diff(periods) != 1):
             raise InputError('Backtesting requires uninterrupted monthly history; these holdings have gaps. Normal simulation is still available.')
     r = np.asarray(returns, dtype=float)
-    # Same starting allocation for real and simulated paths; test months never enter the fit.
+
     actual = np.r_[np.sum(values), np.exp(np.cumsum(r[-12:], axis=0)) @ values]
     return r[:-12], actual
 

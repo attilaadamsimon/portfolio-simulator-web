@@ -1,4 +1,3 @@
-"""Holdings snapshots and explicitly recognized Scalable transaction exports."""
 from datetime import datetime
 from decimal import Decimal
 import csv
@@ -78,7 +77,7 @@ def read_csv(raw):
         raise InputError("Invalid CSV formatting. Check the separator and quotation marks.") from None
     if not rows:
         raise InputError("The CSV has no holdings.")
-    # Generic Type/Action columns in European exports also identify trades.
+
     action_columns = [h for h in headers if key(h) in {"type", "typ", "action", "aktion"}]
     if not scalable and any(key(row[h]) in TRANSACTION_ACTIONS for row in rows for h in action_columns):
         raise InputError("This contains transactions. Upload a current holdings snapshot instead.")
@@ -98,8 +97,8 @@ def inspect_csv(raw):
 def parse_scalable(headers, rows):
     columns = scalable_columns(headers)
     get = lambda row, field: str(row.get(columns.get(field), '') or '').strip()
-    # Scalable exports ungrouped quantities; infer decimal convention from the
-    # export itself, never from the user's holdings-column settings.
+
+
     decimal_marks = {mark for row in rows for mark in (',', '.') if mark in get(row, 'shares')}
     if len(decimal_marks) > 1:
         raise InputError('Scalable shares have mixed decimal separators. Re-export with one number format.')

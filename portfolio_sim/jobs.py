@@ -1,4 +1,3 @@
-"""Bounded in-memory background jobs using Python's standard library only."""
 from concurrent.futures import ThreadPoolExecutor
 from secrets import token_urlsafe
 from threading import Event, Lock
@@ -24,7 +23,7 @@ class JobManager:
             if now-job['created'] > 900:
                 job['cancel'].set()
                 del self.jobs[key]
-        # Keep a bounded number of results, evicting oldest completed jobs first.
+
         if make_room and len(self.jobs) >= 16:
             for key, job in list(self.jobs.items()):
                 if job['status'] in {'done','error','cancelled'}:

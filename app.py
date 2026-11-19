@@ -1,4 +1,3 @@
-"""Run `python app.py` and open http://127.0.0.1:8050."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
@@ -132,7 +131,7 @@ def create_app(test_config=None):
             if option in body and not isinstance(body[option], bool):
                 raise InputError(f"Invalid {option} setting.")
         years, paths, seed = body.get("years", 10), body.get("paths", 2000), body.get("seed", 42)
-        # Validate cheap settings before any external market calls.
+
         for label, value, low, high in [("Years", years, 1, 30), ("Paths", paths, 100, 5000), ("Seed", seed, 0, 2**32 - 1)]:
             if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
                 raise InputError(f"{label} must be an integer between {low} and {high}.")
@@ -167,13 +166,13 @@ def create_app(test_config=None):
         prepared = market.prepare(holdings, currency, selection, body.get("allow_stale", False), body.get("refresh", False))
         return dict(prepared, demo=False)
 
-    # Keep the original synchronous endpoint for compatibility and parity checks.
+
     register_jobs(app, prepare_job, validate_job_portfolio)
     return app
 
 
 def demo_result(currency, selection, years, paths, seed, prepare_only=False):
-    """A shareable, offline showcase; these are not real securities or prices."""
+
     rng = np.random.default_rng(2026)
     common = rng.normal(0, .025, (60, 1))
     returns = common + rng.normal([.005, .006, .004], [.035, .045, .018], (60, 3))

@@ -1,8 +1,7 @@
-"""Editable, explicitly illustrative stress assumptions and one-click presets."""
 import numpy as np
 
-# Annual S&P 500 total returns, 2000–2025 (USD, dividends included).
-# Source: https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html
+
+
 SP500_RETURNS = [-9.03,-11.85,-21.97,28.36,10.74,4.83,15.61,5.48,-36.55,25.94,
                  14.82,2.10,15.89,32.15,13.52,1.38,11.77,21.61,-4.23,31.21,
                  18.02,28.47,-18.04,26.06,24.88,17.78]
@@ -17,7 +16,7 @@ PRESETS = {
               'note':'S&P 500 USD annual total returns, 2000–2025 (NYU Stern/Damodaran). Mean and sample standard deviation of annual log returns. Applied to your portfolio in the selected currency; not an FX-adjusted index replay.',
               'source':'https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html'},
 }
-# Stress is a constant regime over the chosen horizon, not a historical reconstruction.
+
 SCENARIOS = {
     'crisis2008': {'name':'2008 financial crisis', 'drift':-.45, 'volatility':.45,
                   'jump_frequency':2., 'jump_mean':-.20, 'jump_std':.12, 'theta_vol':.45, 'xi':.6,

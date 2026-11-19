@@ -1,4 +1,3 @@
-"""Additional portfolio models; monthly summaries keep large runs memory bounded."""
 import math
 import numpy as np
 
@@ -13,7 +12,7 @@ LIMITS = {'drift': (-.8, .4), 'volatility': (0, 1), 'jump_frequency': (0, 10),
 
 
 class Cancelled(Exception):
-    """A newer request or the Cancel button stopped this run."""
+    pass
 
 
 def validate_options(options):
@@ -65,7 +64,7 @@ def simulate_model(returns, values, years=10, paths=2000, seed=42, options=None,
     original_mean = mean.copy()
     scale = 1.
     if options['drift'] is not None:
-        # Shift every asset equally, keeping relative historical drift differences.
+
         mean = mean + options['drift'] / 12 - mean @ weights
     if options['volatility'] is not None:
         current = np.sqrt(max(0, weights @ cov @ weights) * 12)
@@ -100,19 +99,19 @@ def simulate_model(returns, values, years=10, paths=2000, seed=42, options=None,
         if cancelled and cancelled():
             raise Cancelled()
         if model in {'gbm', 'merton'}:
-            # Same draw order and log drift as the original GBM implementation.
+
             log_growth += mean + rng.standard_normal((paths, n)) @ root.T
             if model == 'merton' and options['jump_frequency']:
                 count = rng.poisson(options['jump_frequency'] / 12, size=paths)
                 jump = count * options['jump_mean'] + np.sqrt(count) * options['jump_std'] * rng.standard_normal(paths)
-                # Standard Merton compensation preserves the diffusion's arithmetic expectation.
+
                 compensation = options['jump_frequency'] * np.expm1(options['jump_mean'] + .5 * options['jump_std']**2) / 12
                 log_growth += (jump - compensation)[:, None]
         elif model == 'bootstrap':
             block = options['block_months']
             if (month - 1) % block == 0:
                 indices = rng.integers(0, len(r), size=paths)
-            # Entire rows are resampled together; circular blocks retain short serial patterns.
+
             log_growth += adjusted_history[indices]
             indices = (indices + 1) % len(r)
         else:
@@ -123,7 +122,7 @@ def simulate_model(returns, values, years=10, paths=2000, seed=42, options=None,
                 v = np.maximum(variance, 0)
                 z = rng.standard_normal((paths, n)) @ corr_root.T
                 zv = options['rho'] * z + np.sqrt(1-options['rho']**2) * rng.standard_normal((paths, n))
-                # Full-truncation Euler: negative internal variance is never square-rooted.
+
                 log_growth += (mean * 12 + .5 * annual_var - .5 * v) * dt + np.sqrt(v * dt) * z
                 variance += options['kappa'] * (theta - v) * dt + options['xi'] * np.sqrt(v * dt) * zv
         if not np.isfinite(log_growth).all() or np.max(log_growth) > 600:
@@ -131,7 +130,7 @@ def simulate_model(returns, values, years=10, paths=2000, seed=42, options=None,
         end = np.exp(log_growth) @ values
         if not np.isfinite(end).all():
             raise InputError('The simulation exceeded numerical limits.')
-        # Store only monthly quantiles and 25 display paths, not all full paths.
+
         bands[:, month] = np.percentile(end, [5, 25, 50, 75, 95])
         samples[:, month] = end[:len(samples)]
         if progress:
@@ -152,7 +151,7 @@ def simulate_model(returns, values, years=10, paths=2000, seed=42, options=None,
         if actual.shape != (steps+1,) or not np.isfinite(actual).all():
             raise InputError('Historical comparison must match the simulation horizon.')
         outside = (actual[1:] < bands[0,1:]) | (actual[1:] > bands[4,1:])
-        # Midrank handles deterministic ties instead of incorrectly calling them 100th percentile.
+
         percentile = 100 * (np.mean(end < actual[-1]) + .5*np.mean(end == actual[-1]))
         result['historical'] = {'values': actual.tolist(), 'percentile': float(percentile),
                                 'outside_months': int(outside.sum()), 'months': steps, 'inside': (~outside).tolist()}

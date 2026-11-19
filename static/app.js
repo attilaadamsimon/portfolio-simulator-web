@@ -3,7 +3,6 @@ const $ = id => document.getElementById(id);
 const state = {demo:false, holdings:[], picked:[], result:null, file:null, info:null, busy:false, lookupIndex:null, importNote:"", selected:null};
 const money = (n, currency=state.result?.currency || $("currency").value) => new Intl.NumberFormat("en-GB", {style:"currency",currency,maximumFractionDigits:0}).format(n);
 const node = (tag, text, className) => {const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(className)n.className=className;return n;};
-// Remember dismissed notices only for this session; new notices and errors still appear.
 const dismissedNotices=new Set();
 function message(text="", error=false){$("message-text").textContent=text;$("message").hidden=!text||(!error&&dismissedNotices.has(text));$("message").className=error?"error":"";}
 $("dismiss-message").addEventListener("click",()=>{if(!$("message").classList.contains("error"))dismissedNotices.add($("message-text").textContent);$("message").hidden=true;});
@@ -41,7 +40,6 @@ function highlightPath(index){
   const previous=state.selected;
   state.selected=previous===index?null:index;
   const graph=$("chart"),c=colors(),comparison=state.result.comparisons?.length>1;
-  // No redraw on initial render; a click updates only affected paths in one batch.
   const indices=comparison&&previous!==state.selected
     ?graph.data.map((_,i)=>i).filter(i=>graph.data[i].meta?.baseWidth!==undefined)
     :[...new Set([previous,state.selected])].filter(i=>i!==null&&graph.data[i]?.meta?.baseWidth!==undefined);
@@ -68,7 +66,6 @@ async function resolveHoldings(){
   }
 }
 const plotConfig={responsive:true,displayModeBar:false,staticPlot:false};
-// Navigation changes only the view, never the simulated values.
 const chartView={mode:"pan",result:null,revision:0};
 function setChartMode(mode){
   chartView.mode=mode;
@@ -83,7 +80,6 @@ $("chart-reset").addEventListener("click",()=>{
   if(state.result)Plotly.relayout("chart",{"xaxis.range":[0,state.result.years],"xaxis.autorange":false,"yaxis.autorange":true});
 });
 function renderResult(r){
-  // Keep a zoomed view when changing theme; new results start at the full range.
   if(chartView.result!==r){chartView.result=r;chartView.revision++;}
   $("empty-chart").hidden=true;$("chart").hidden=false;
   ["metrics","chart-legend","chart-footer","chart-navigation","selection-row","distribution","holdings-panel"].forEach(id=>$(id).hidden=false);
@@ -125,7 +121,6 @@ function renderHistogram(){
   const r=state.result,h=r.histogram,layoutBase=chartLayout(),c=colors();
   Plotly.react("histogram",[{x:h.centers,y:h.counts,width:h.widths,type:"bar",marker:{color:c.accent,line:{width:1,color:c.paper}},hovertemplate:`%{x:,.0f} ${r.currency}<br>%{y} simulations<extra></extra>`}],{...layoutBase,hovermode:"closest",xaxis:{...layoutBase.xaxis,title:{text:`Final portfolio value (${r.currency})`},tickformat:"~s"},yaxis:{...layoutBase.yaxis,title:{text:"Simulations"}}},plotConfig);
 }
-// Slice sizes use the same currency-converted starting values as the simulation.
 function renderAllocation(r){
   const holdings=r.holdings.filter(h=>Number(h.value)>0).slice().sort((a,b)=>b.value-a.value);
   const total=holdings.reduce((sum,h)=>sum+Number(h.value),0),c=colors();
@@ -217,7 +212,6 @@ $("distribution").addEventListener("toggle",renderHistogram);
 $("download").addEventListener("click",()=>{if(state.result)Plotly.downloadImage("chart",{format:"png",width:1400,height:750,filename:`portfolio-simulation-${state.result.demo?"synthetic-example":state.result.currency}`});});
 $("lookup-search").addEventListener("click",lookup);$("lookup-close").addEventListener("click",()=>{$("lookup").hidden=true;});
 $("lookup-query").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();lookup();}});
-// Recheck while the page is active; do not overwrite edited settings or holdings.
 setInterval(()=>{if(state.result&&!state.demo&&!state.busy&&!state.running&&!document.hidden&&!$("results").classList.contains("outdated")&&$("mapping-panel").hidden)run();},15*60*1000);
 
 function resetResults(){
@@ -260,6 +254,4 @@ $("simulate-picked")?.addEventListener("click",()=>{
   resetResults();$("picker-panel").hidden=true;$("mapping-panel").hidden=true;$("lookup").hidden=true;
   document.querySelector('[name="selection"][value="All"]').checked=true;renderHoldings();run();
 });
-
-// Apply the same disabled states on the empty opening screen.
 busy(false);
